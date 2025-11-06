@@ -2,7 +2,8 @@
 # Post Processors to run on Fusion360 and generate code for Marlin 2.x
 
 This repository contains three fully operational Fusion360 post processors for Marlin firmware, maintained by **rflulling** and developed with the assistance of **GitHub Copilot GPT-4.1**.
-rflulling would like you to know that he is simply the project manager. He asked Copilot to do the work, did testing and made sure the project remained on track. But Credit for the code work and most of the heavy lifting goes to CoPilot as rfluylling would likely have never been able to do this on his own, and was never able to recruit any one to help.
+
+rflulling would like you to know that he is simply the project manager. He asked Copilot to do the work, did testing and made sure the project remained on track. But Credit for the code work and most of the heavy lifting goes to CoPilot as rflulling would likely have never been able to do this on his own, and was never able to recruit any one to help.
 
 At this time both post processor version work. Though many of teh more advanced features are still being worked on. Though nothing new has been added since this repository was founded. 
 
