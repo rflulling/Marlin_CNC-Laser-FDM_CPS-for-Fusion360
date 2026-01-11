@@ -16,7 +16,7 @@ Testing and feed back from other users is highly desired.
   A minimal, clean, real G-code post with mode selection, output rules, and concise configuration.
 - **Marlin MultiMode**  
   Full support for FDM, CNC, and Laser. User-selectable speed control, startup/shutdown options, and **TMC driver setup support** for advanced users. Includes optional dynamic TMC adjustments (v1.6.0).
-- **Marlin Magic Speed**  
+- **Marlin Magic**  
   Experimental “magic” segment-aware speed/accel/jerk logic. Also supports basic and G-code modes.
 
 ---
