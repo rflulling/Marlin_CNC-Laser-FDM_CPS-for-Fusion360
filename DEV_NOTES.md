@@ -45,7 +45,7 @@
 - **File extension:**  
   - User can select `.gcode` (default) or `.nc`
 - **Warnings:**  
-  - E axis moves in non-FDM modes are flagged-
+  - E axis moves in non-FDM modes are flagged
 
 - **Optional Header block:**  
   - Outputs vendor, version, credits, config summary, units, positioning, zeroing, device start/stop, TMC config, custom code
