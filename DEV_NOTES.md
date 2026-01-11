@@ -29,7 +29,7 @@
 
 - **Marlin_minimal.cps**:  
   Clean, basic, real Marlin output. Use as a template for new posts or for debugging. Now supports per-axis inversion.
-  This variant has no special tweaks and will not alter the output from Fusion360 in anyway other than what is absolutely necessary to makie the code executable on your Marlin 2.x based controller. 
+  This variant has no special tweaks and will not alter the output from Fusion360 in anyway other than what is absolutely necessary to make the code executable on your Marlin 2.x based controller. 
 - **Marlin_multimode.cps**:  
   Full-featured. User can choose mode (FDM, CNC, Laser), speed logic, startup/shutdown, and **TMC driver setup for power users**.
   This will code will become the full featured CPS as functions and features mature.
