@@ -54,7 +54,7 @@
 
 - **Required Units & Positioning:**  
   - Outputs `G21`/`G20` and `G90` at top of file.
-- **Optional Work place Zeroing:**  
+- **Optional Workplace Zeroing:**  
   - User can select: None, Auto (G92 X0 Y0 Z0), or Custom (G92 with user offsets)
 - **Required Spindle/Router/Laser Start:**  
   - User can select startup: Automatic (insert M3/M106), Operator, or Hardware (comment only)
