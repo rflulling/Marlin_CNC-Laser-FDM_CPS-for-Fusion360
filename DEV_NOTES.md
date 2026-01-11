@@ -27,41 +27,50 @@
 
 ## File Overview
 
-- **marlin_mode_minimal.cps**:  
+- **Marlin_minimal.cps**:  
   Clean, basic, real Marlin output. Use as a template for new posts or for debugging. Now supports per-axis inversion.
-- **marlin_multimode.cps**:  
-  Full-featured. User can choose mode (FDM, CNC, Laser), speed logic, startup/shutdown, and **TMC driver setup for power users**. Now includes dynamic TMC adjustments (v1.6.0) and per-axis inversion (v1.6.1).
-- **marlin_magic_speed.cps**:  
-  Like MultiMode, but adds “Magic” experimental per-move speed/accel/jerk logic. Now includes per-axis inversion.
+  This variant has no special tweaks and will not alter the output from Fusion360 in anyway other than what is absolutely necessary to make the code executable on your Marlin 2.x based controller. 
+- **Marlin_multimode.cps**:  
+  Full-featured. User can choose mode (FDM, CNC, Laser), speed logic, startup/shutdown, and **TMC driver setup for power users**.
+  This code will become the full featured CPS as functions and features mature.
+  Now includes dynamic TMC adjustments (v1.6.0) and per-axis inversion (v1.6.1).
+- **Marlin_magic.cps**:  
+  Like MultiMode, but adds experimental per-move speed/accel/jerk logic.
+  Now includes per-axis inversion.
 
 ---
 
 ## Major Features
 
-- **Header block:**  
-  - Outputs vendor, version, credits, config summary, units, positioning, zeroing, device start/stop, TMC config, custom code
-- **Units & Positioning:**  
-  - Outputs `G21`/`G20` and `G90` at top of file (always absolute for Marlin)
-- **Zeroing:**  
-  - User can select: None, Auto (G92 X0 Y0 Z0), or Custom (G92 with user offsets)
-- **Spindle/Router/Laser Start:**  
-  - User can select startup: Automatic (insert M3/M106), Operator, or Hardware (comment only)
-- **Shutdown:**  
-  - Default (Z retract, OFF, Y home, X home), Custom, or None
-- **TMC Driver Setup** (MultiMode only):  
-  - Optional, advanced-use property to insert custom Marlin TMC M-codes at startup (e.g., for current, mode, hybrid threshold, etc)
-  - All code and settings clearly commented in header for traceability
-- **Dynamic TMC Adjustments** (MultiMode only):  
-  - Optional feature to emit TMC commands during the job based on feed thresholds to better utilize advanced driver features
-  - Includes dedupe and rate-limiting; configurable templates and thresholds
-- **Per-axis Inversion:**  
-  - New invertX and invertY properties to allow coordinate inversion for X and Y independently. Inversion is applied in onLinear and onRapid before G-code emission.
-- **Custom startup/header/end code:**  
-  - User-supplied, output verbatim before toolpath or at end
 - **File extension:**  
   - User can select `.gcode` (default) or `.nc`
 - **Warnings:**  
   - E axis moves in non-FDM modes are flagged
+
+- **Optional Header block:**  
+  - Outputs vendor, version, credits, config summary, units, positioning, zeroing, device start/stop, TMC config, custom code
+- **Optional Custom startup/header/end code:**  
+  - User-supplied, output verbatim before toolpath or at end
+
+- **Required Units & Positioning:**  
+  - Outputs `G21`/`G20` and `G90` at top of file.
+- **Optional Workplace Zeroing:**  
+  - User can select: None, Auto (G92 X0 Y0 Z0), or Custom (G92 with user offsets)
+- **Required Spindle/Router/Laser Start:**  
+  - User can select startup: Automatic (insert M3/M106), Operator, or Hardware (comment only)
+
+- **Optional TMC Driver Setup** (MultiMode only):  
+  - advanced-use property to insert custom Marlin TMC M-codes at startup (e.g., for current, mode, hybrid threshold, etc)
+  - All code and settings clearly commented in header for traceability
+- **Dynamic TMC Adjustments** (MultiMode only):  
+  - feature to dynamically configure and insert TMC commands during the job based on feed thresholds to better utilize advanced driver features
+  - Includes dedupe and rate-limiting; configurable templates and thresholds
+- **Per-axis Inversion:**  
+  - New invert-X and invert-Y properties to allow coordinate inversion for X and Y independently. Inversion is applied in onLinear and onRapid before G-code emission.
+
+- **Optional Shutdown:**  
+  - Default (Z retract, OFF, Y home, X home), Custom, or None
+
 
 ---
 
