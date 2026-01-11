@@ -63,7 +63,7 @@
   - advanced-use property to insert custom Marlin TMC M-codes at startup (e.g., for current, mode, hybrid threshold, etc)
   - All code and settings clearly commented in header for traceability
 - **Dynamic TMC Adjustments** (MultiMode only):  
-  - feature to dynamicly configure and insert TMC commands during the job based on feed thresholds to better utilize advanced driver features
+  - feature to dynamically configure and insert TMC commands during the job based on feed thresholds to better utilize advanced driver features
   - Includes dedupe and rate-limiting; configurable templates and thresholds
 - **Per-axis Inversion:**  
   - New invert-X and invert-Y properties to allow coordinate inversion for X and Y independently. Inversion is applied in onLinear and onRapid before G-code emission.
