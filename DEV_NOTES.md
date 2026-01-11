@@ -32,7 +32,7 @@
   This variant has no special tweaks and will not alter the output from Fusion360 in anyway other than what is absolutely necessary to make the code executable on your Marlin 2.x based controller. 
 - **Marlin_multimode.cps**:  
   Full-featured. User can choose mode (FDM, CNC, Laser), speed logic, startup/shutdown, and **TMC driver setup for power users**.
-  This will code will become the full featured CPS as functions and features mature.
+  This code will become the full featured CPS as functions and features mature.
   Now includes dynamic TMC adjustments (v1.6.0) and per-axis inversion (v1.6.1).
 - **Marlin_magic.cps**:  
   Like MultiMode, but adds experimental per-move speed/accel/jerk logic.
