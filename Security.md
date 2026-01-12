@@ -9,4 +9,4 @@
 ## Open to revision
 
 - If you would like to participate, I do welcome help and suggestions.
-- You are also welcome to suggest alterations to the security configuraton that will allow it to be more flexable to open assistance. 
+- You are also welcome to suggest alterations to the security configuration that will allow it to be more flexible to open assistance. 
