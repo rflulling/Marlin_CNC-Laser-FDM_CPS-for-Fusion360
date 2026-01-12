@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 rflulling
 // An open source project developed by GitHub Copilot GPT-4.1 and rflulling
-// Version: 1.6.2
+// Version: 1.6.3
 /**
  * Fusion360 Post Processor for Marlin (FDM/CNC/Laser) - Multi-Mode
  *
@@ -19,7 +19,7 @@ extension = "gcode"; // default, user can override
 certificationLevel = 2; // Non-Autodesk certified; disables certification error
 
 /*
-Version: 1.6.2
+ Version: 1.6.3
 Vendor: rflulling
 Credits: GitHub Copilot GPT-4.1
 */
@@ -32,6 +32,8 @@ properties = {
   autoZero: 0,
   customZero: "X0 Y0 Z0",
   customHeader: "",
+  levelingMode: 0,
+  levelingInvocation: 0,
   fileExt: 0,
   startDevice: 0,
   shutdownMode: 0,
@@ -105,6 +107,31 @@ propertyDefinitions = {
     type: "string",
     default_mm: "",
     default_in: ""
+  },
+  levelingMode: {
+    title: "Leveling Mode (FDM/CNC)",
+    description: "Disabled, Software (host-managed), Hardware (firmware), or Software Override (firmware + host capture).",
+    type: "integer",
+    values: [
+      { title: "Disabled", id: 0 },
+      { title: "Software (host)", id: 1 },
+      { title: "Hardware (firmware)", id: 2 },
+      { title: "Software Override", id: 3 }
+    ],
+    default_mm: 0,
+    default_in: 0
+  },
+  levelingInvocation: {
+    title: "Leveling Invocation",
+    description: "When/how leveling should be invoked in the program output.",
+    type: "integer",
+    values: [
+      { title: "Manual/External (no code emitted)", id: 0 },
+      { title: "Run at program start", id: 1 },
+      { title: "Restore/report saved mesh", id: 2 }
+    ],
+    default_mm: 0,
+    default_in: 0
   },
   fileExt: {
     title: "Output File Extension",
@@ -243,14 +270,100 @@ propertyDefinitions = {
 
 var machineModeLabels = ["FDM", "CNC", "LASER"];
 var speedModeLabels = ["Firmware", "Gcode", "Magic"];
+var levelingModeLabels = ["Disabled", "Software", "Hardware", "Software Override"];
+var levelingInvocationLabels = ["Manual/External (no code)", "Run at program start", "Restore/report saved mesh"];
+var LEVELING_DISABLED = 0;
+var LEVELING_SOFTWARE = 1;
+var LEVELING_HARDWARE = 2;
+var LEVELING_OVERRIDE = 3;
+var INVOCATION_MANUAL = 0;
+var INVOCATION_START = 1;
+var INVOCATION_RESTORE = 2;
+var MODE_FDM = 0;
+var MODE_CNC = 1;
+var MODE_LASER = 2;
 var _lastTmcSet = "";
 var _lastTmcTime = 0;
+
+function emitLevelingDirectives() {
+  var props = properties;
+  var lMode = props.levelingMode || 0;
+  var lInvoke = props.levelingInvocation || 0;
+  var lModeLabel = levelingModeLabels[lMode] || "Disabled";
+  var lInvokeLabel = levelingInvocationLabels[lInvoke] || "Manual/External (no code)";
+  if (lMode === LEVELING_DISABLED) {
+    return;
+  }
+  writeln("; Leveling selection: " + lModeLabel + " (invoke: " + lInvokeLabel + ")");
+  var mode = props.machineMode;
+  if (mode === MODE_FDM) {
+    if (lMode === LEVELING_SOFTWARE) { // Software
+      writeln("; SOFTWARE LEVELING: Host/controller should probe or supply mesh.");
+      if (lInvoke === INVOCATION_START) {
+        writeln("; SOFTWARE_LEVELING_START");
+      } else if (lInvoke === INVOCATION_RESTORE) {
+        writeln("; SOFTWARE_LEVELING_RESTORE");
+      }
+    } else if (lMode === LEVELING_HARDWARE) { // Hardware/Firmware
+      if (lInvoke === INVOCATION_START) {
+        writeln("G28 ; Home before firmware leveling");
+        writeln("G29 ; Firmware leveling sequence (FDM)");
+      } else if (lInvoke === INVOCATION_RESTORE) {
+        writeln("M420 S1 ; Enable previously saved leveling mesh");
+      } else {
+        writeln("; Firmware/automatic leveling expected (no explicit commands emitted).");
+      }
+    } else if (lMode === LEVELING_OVERRIDE) { // Software override
+      writeln("; SOFTWARE OVERRIDE: Capture firmware leveling data for host.");
+      if (lInvoke === INVOCATION_START) {
+        writeln("G28 ; Home before leveling");
+        writeln("G29 ; Probe surface (firmware)");
+        writeln("M420 V ; Report leveling state/mesh to host");
+      } else if (lInvoke === INVOCATION_RESTORE) {
+        writeln("M420 V ; Report stored leveling data to host");
+      }
+    }
+  } else if (mode === MODE_CNC) {
+    if (lMode === LEVELING_SOFTWARE) {
+      writeln("; SOFTWARE LEVELING (CNC): Host should probe stock and apply work offset.");
+      if (lInvoke === INVOCATION_START) {
+        writeln("; SOFTWARE_LEVELING_START");
+      } else if (lInvoke === INVOCATION_RESTORE) {
+        writeln("; SOFTWARE_LEVELING_RESTORE");
+      }
+    } else if (lMode === LEVELING_HARDWARE) {
+      if (lInvoke === INVOCATION_START) {
+        writeln("; Firmware/CNC leveling requested.");
+        writeln("; Requires Marlin configured for CNC probing/leveling with an appropriate probe or touch plate.");
+        writeln("G28 ; Home before leveling");
+        writeln("G29 ; Probe surface (CNC leveling)");
+      } else if (lInvoke === INVOCATION_RESTORE) {
+        writeln("M420 S1 ; Restore saved leveling mesh (CNC)");
+      } else {
+        writeln("; Firmware or external CNC leveling handled outside this file.");
+      }
+    } else if (lMode === LEVELING_OVERRIDE) {
+      writeln("; SOFTWARE OVERRIDE (CNC): Firmware leveling with host capture of mesh.");
+      if (lInvoke === INVOCATION_START) {
+        writeln("G28 ; Home before leveling");
+        writeln("G29 ; Firmware leveling");
+        writeln("M420 V ; Host capture leveling data");
+      } else if (lInvoke === INVOCATION_RESTORE) {
+        writeln("M420 V ; Report stored leveling mesh to host");
+      }
+    }
+  } else if (mode === MODE_LASER) {
+    writeln("; Leveling not applied in Laser mode.");
+  } else {
+    writeln("; Leveling not applied in current machine mode.");
+  }
+}
 
 function onOpen() {
   extension = properties.fileExt === 1 ? "nc" : "gcode";
   writeln("; ==============================================");
   writeln("; Marlin Multi-Mode Post - Mode: " + machineModeLabels[properties.machineMode] + " | Speed: " + speedModeLabels[properties.speedControlMode]);
-  writeln("; Vendor: rflulling | Version: 1.6.2 | Credits: GitHub Copilot GPT-4.1");
+  writeln("; Vendor: rflulling | Version: 1.6.3 | Credits: GitHub Copilot GPT-4.1");
   writeln("; Units: " + (unit == MM ? "mm" : "inch"));
   writeln("; Positioning: Absolute (G90)");
   writeln("; Zeroing: " +
@@ -265,6 +378,7 @@ function onOpen() {
     (properties.shutdownMode === 0 ? "Default" :
      properties.shutdownMode === 1 ? "Custom" : "None"));
   writeln("; Axis invert: X=" + (properties.invertX ? "INVERTED" : "NORMAL") + ", Y=" + (properties.invertY ? "INVERTED" : "NORMAL"));
+  writeln("; Leveling: " + (levelingModeLabels[properties.levelingMode] || "Disabled") + " (invoke: " + (levelingInvocationLabels[properties.levelingInvocation] || "Manual/External (no code)") + ")");
   if (properties.enableTMCSetup && properties.tmcSetupCode) {
     writeln("; --- TMC Driver Setup ---");
     writeln("; User-supplied TMC driver configuration is enabled.");
@@ -299,6 +413,7 @@ function onOpen() {
   } else if (properties.autoZero === 2) {
     writeln("G92 " + properties.customZero);
   }
+  emitLevelingDirectives();
   if ((properties.machineMode === 1 || properties.machineMode === 2) && properties.startDevice === 0) {
     if (properties.machineMode === 1) {
       writeln("M3 ; Start spindle/router");

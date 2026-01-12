@@ -58,6 +58,8 @@ Testing and feed back from other users is highly desired.
 
 ### MultiMode
 
+- **1.6.3** (2026-01-12)
+    - Added leveling mode options (Disabled/Software/Hardware/Software Override) and invocation choices for FDM and CNC output.
 - **1.6.1** (2025-10-16)
     - Added per-axis Invert X/Invert Y options; applied to linear/rapid moves; header echo updated.
 - **1.6.0** (2025-10-16)
