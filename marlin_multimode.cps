@@ -271,29 +271,36 @@ propertyDefinitions = {
 var machineModeLabels = ["FDM", "CNC", "LASER"];
 var speedModeLabels = ["Firmware", "Gcode", "Magic"];
 var levelingModeLabels = ["Disabled", "Software", "Hardware", "Software Override"];
-var levelingInvocationLabels = ["Manual/External", "Start of Program", "Restore/Report Mesh"];
+var levelingInvocationLabels = ["Manual/External (no code)", "Run at program start", "Restore/report saved mesh"];
+var LEVELING_DISABLED = 0;
+var LEVELING_SOFTWARE = 1;
+var LEVELING_HARDWARE = 2;
+var LEVELING_OVERRIDE = 3;
+var MODE_FDM = 0;
+var MODE_CNC = 1;
+var MODE_LASER = 2;
 var _lastTmcSet = "";
 var _lastTmcTime = 0;
 
 function emitLevelingDirectives() {
-  var lMode = properties.levelingMode || 0;
-  var lInvoke = properties.levelingInvocation || 0;
+  var props = properties;
+  var lMode = props.levelingMode || 0;
+  var lInvoke = props.levelingInvocation || 0;
   var lModeLabel = levelingModeLabels[lMode] || "Disabled";
-  var lInvokeLabel = levelingInvocationLabels[lInvoke] || "Manual/External";
-  writeln("; Leveling: " + lModeLabel + " (invoke: " + lInvokeLabel + ")");
-  if (lMode === 0) {
+  var lInvokeLabel = levelingInvocationLabels[lInvoke] || "Manual/External (no code)";
+  if (lMode === LEVELING_DISABLED) {
     return;
   }
-  var mode = properties.machineMode;
-  if (mode === 0) { // FDM
-    if (lMode === 1) { // Software
+  var mode = props.machineMode;
+  if (mode === MODE_FDM) {
+    if (lMode === LEVELING_SOFTWARE) { // Software
       writeln("; SOFTWARE LEVELING: Host/controller should probe or supply mesh.");
       if (lInvoke === 1) {
         writeln(";SOFTWARE_LEVELING_START");
       } else if (lInvoke === 2) {
         writeln(";SOFTWARE_LEVELING_RESTORE");
       }
-    } else if (lMode === 2) { // Hardware/Firmware
+    } else if (lMode === LEVELING_HARDWARE) { // Hardware/Firmware
       if (lInvoke === 1) {
         writeln("G28 ; Home before firmware leveling");
         writeln("G29 ; Firmware leveling sequence (FDM)");
@@ -302,7 +309,7 @@ function emitLevelingDirectives() {
       } else {
         writeln("; Firmware/automatic leveling expected (no explicit commands emitted).");
       }
-    } else if (lMode === 3) { // Software override
+    } else if (lMode === LEVELING_OVERRIDE) { // Software override
       writeln("; SOFTWARE OVERRIDE: Capture firmware leveling data for host.");
       if (lInvoke === 1) {
         writeln("G28 ; Home before leveling");
@@ -312,17 +319,18 @@ function emitLevelingDirectives() {
         writeln("M420 V ; Report stored leveling data to host");
       }
     }
-  } else if (mode === 1) { // CNC
-    if (lMode === 1) {
+  } else if (mode === MODE_CNC) {
+    if (lMode === LEVELING_SOFTWARE) {
       writeln("; SOFTWARE LEVELING (CNC): Host should probe stock and apply work offset.");
       if (lInvoke === 1) {
-        writeln(";SOFTWARE_CNC_LEVEL_START");
+        writeln(";SOFTWARE_LEVELING_START");
       } else if (lInvoke === 2) {
-        writeln(";SOFTWARE_CNC_LEVEL_RESTORE");
+        writeln(";SOFTWARE_LEVELING_RESTORE");
       }
-    } else if (lMode === 2) {
+    } else if (lMode === LEVELING_HARDWARE) {
       if (lInvoke === 1) {
-        writeln("; Firmware/CNC leveling requested. Requires Marlin CNC_LEVELING and appropriate probe/touch plate.");
+        writeln("; Firmware/CNC leveling requested.");
+        writeln("; Requires Marlin configured for CNC probing/leveling with an appropriate probe or touch plate.");
         writeln("G28 ; Home before leveling");
         writeln("G29 ; Probe surface (CNC leveling)");
       } else if (lInvoke === 2) {
@@ -330,7 +338,7 @@ function emitLevelingDirectives() {
       } else {
         writeln("; Firmware or external CNC leveling handled outside this file.");
       }
-    } else if (lMode === 3) {
+    } else if (lMode === LEVELING_OVERRIDE) {
       writeln("; SOFTWARE OVERRIDE (CNC): Firmware leveling with host capture of mesh.");
       if (lInvoke === 1) {
         writeln("G28 ; Home before leveling");
@@ -340,6 +348,8 @@ function emitLevelingDirectives() {
         writeln("M420 V ; Report stored leveling mesh to host");
       }
     }
+  } else if (mode === MODE_LASER) {
+    writeln("; Leveling not applied in Laser mode.");
   } else {
     writeln("; Leveling not applied in current machine mode.");
   }
@@ -364,7 +374,7 @@ function onOpen() {
     (properties.shutdownMode === 0 ? "Default" :
      properties.shutdownMode === 1 ? "Custom" : "None"));
   writeln("; Axis invert: X=" + (properties.invertX ? "INVERTED" : "NORMAL") + ", Y=" + (properties.invertY ? "INVERTED" : "NORMAL"));
-  writeln("; Leveling: " + (levelingModeLabels[properties.levelingMode] || "Disabled") + " (invoke: " + (levelingInvocationLabels[properties.levelingInvocation] || "Manual/External") + ")");
+  writeln("; Leveling: " + (levelingModeLabels[properties.levelingMode] || "Disabled") + " (invoke: " + (levelingInvocationLabels[properties.levelingInvocation] || "Manual/External (no code)") + ")");
   if (properties.enableTMCSetup && properties.tmcSetupCode) {
     writeln("; --- TMC Driver Setup ---");
     writeln("; User-supplied TMC driver configuration is enabled.");
