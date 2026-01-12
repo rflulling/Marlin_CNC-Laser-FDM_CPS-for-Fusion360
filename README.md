@@ -108,3 +108,8 @@ Testing and feed back from other users is highly desired.
 - **Developed with:** GitHub Copilot GPT-4.1
 
 For developer workflow and advanced notes, see [DEV_NOTES.md](./DEV_NOTES.md).
+
+### Reference Notes
+
+- [Marlin command catalog (TMC, CNC, general)](./reference/marlin_command_catalog.md)
+- [Marlin TMC notes & MultiMode guidance](./reference/marlin_tmc_multimode_notes.md)
