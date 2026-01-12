@@ -3,8 +3,8 @@
 
 ## Current Configuration:
 
-- At this time I keep the settings at their maximum. This may may it difficult to collaborate with those who have genuine interest.
-- This repository is not restricted to be difficult, just to keep out bad actors and those who might try to inject malcious code.
+- At this time I keep the settings at their maximum. This may make it difficult to collaborate with those who have genuine interest.
+- This repository is not restricted to be difficult, just to keep out bad actors and those who might try to inject malicious code.
 
 ## Open to revsion
 
