@@ -9,9 +9,9 @@
 
 ## Suggested Marlin_MultiMode.cps usage
 
-- **TMC Driver Setup (startup block):** insert persistent current/mode lines such as `M906 X800 Y800 Z900` and `M569 S1 X Y` after power-on, matching your machine’s cooling and torque needs.  
+- **TMC Driver Setup (startup block):** insert persistent current/mode lines such as `M906 X800 Y800 Z900` and `M569 S1 X Y` (`S1` = StealthChop, `S0` = SpreadCycle) after power-on, matching your machine’s cooling and torque needs.  
 - **Homing:** add `M920` to drop current and `M914` for bump sensitivity before `G28/G38`.  
-- **Dynamic TMC Adjustments:** keep conservative templates (e.g., `M906 X{X} Y{Y}`) with rate limiting enabled; prefer SpreadCycle for heavy cuts and StealthChop for travel/finishing moves.  
+- **Dynamic TMC Adjustments:** keep conservative templates (e.g., `M906 X{X} Y{Y}` where `{X}/{Y}` are filled by the MultiMode dynamic thresholds, such as `X900`/`Y850`) with rate limiting enabled; prefer SpreadCycle for heavy cuts and StealthChop for travel/finishing moves.  
 - **Header clarity:** echo the chosen TMC lines in the generated G-code header so operators can verify at a glance.  
 
 ## Integration proposals (beyond vanilla Marlin behavior)
