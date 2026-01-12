@@ -31,6 +31,9 @@ properties = {
   speedControlMode: 0,
   autoZero: 0,
   customZero: "X0 Y0 Z0",
+  levelingInvocation: 0,
+  fdmLevelingMode: 0,
+  cncLevelingMode: 0,
   customHeader: "",
   fileExt: 0,
   startDevice: 0,
@@ -98,6 +101,44 @@ propertyDefinitions = {
     type: "string",
     default_mm: "X0 Y0 Z0",
     default_in: "X0 Y0 Z0"
+  },
+  levelingInvocation: {
+    title: "Leveling Invocation",
+    description: "When to invoke leveling logic: Manual/host only markers, automatic at start, or markers only.",
+    type: "integer",
+    values: [
+      { title: "Manual/Host managed", id: 0 },
+      { title: "Automatic at start", id: 1 },
+      { title: "Markers only (no firmware commands)", id: 2 }
+    ],
+    default_mm: 0,
+    default_in: 0
+  },
+  fdmLevelingMode: {
+    title: "FDM Leveling Mode",
+    description: "FDM leveling mode: Disabled, Software (host), Hardware (firmware G29 auto-leveling), Software Override (firmware G29 + host mesh reporting).",
+    type: "integer",
+    values: [
+      { title: "Disabled", id: 0 },
+      { title: "Software", id: 1 },
+      { title: "Hardware", id: 2 },
+      { title: "Software Override", id: 3 }
+    ],
+    default_mm: 0,
+    default_in: 0
+  },
+  cncLevelingMode: {
+    title: "CNC Leveling Mode",
+    description: "CNC leveling mode: Disabled, Software (host mesh), Hardware (firmware probing), Software Override (firmware probing + host mesh reporting).",
+    type: "integer",
+    values: [
+      { title: "Disabled", id: 0 },
+      { title: "Software", id: 1 },
+      { title: "Hardware", id: 2 },
+      { title: "Software Override", id: 3 }
+    ],
+    default_mm: 0,
+    default_in: 0
   },
   customHeader: {
     title: "Custom Header/Startup Code",
@@ -243,6 +284,8 @@ propertyDefinitions = {
 
 var machineModeLabels = ["FDM", "CNC", "LASER"];
 var speedModeLabels = ["Firmware", "Gcode", "Magic"];
+var levelingModeLabels = ["Disabled", "Software", "Hardware", "Software Override"];
+var levelingInvocationLabels = ["Manual/Host managed", "Auto Start", "Markers Only"];
 var _lastTmcSet = "";
 var _lastTmcTime = 0;
 
@@ -256,6 +299,12 @@ function onOpen() {
   writeln("; Zeroing: " +
     (properties.autoZero === 1 ? "Auto (G92 X0 Y0 Z0)" :
      properties.autoZero === 2 ? "Custom (" + properties.customZero + ")" : "None"));
+  if (properties.machineMode !== 2) {
+    var lvMode = properties.machineMode === 0 ? properties.fdmLevelingMode : properties.cncLevelingMode;
+    writeln("; Leveling: " + levelingModeLabels[lvMode] + " | Invocation: " + levelingInvocationLabels[properties.levelingInvocation]);
+  } else {
+    writeln("; Leveling: N/A (Laser mode)");
+  }
   if (properties.machineMode === 1 || properties.machineMode === 2) {
     var devType = (properties.machineMode === 1) ? "Spindle/Router" : "Laser";
     var startChoice = ["Automatic by G-code/script", "Operator will start manually", "Handled by separate hardware"][properties.startDevice];
@@ -299,6 +348,7 @@ function onOpen() {
   } else if (properties.autoZero === 2) {
     writeln("G92 " + properties.customZero);
   }
+  emitLevelingSetup();
   if ((properties.machineMode === 1 || properties.machineMode === 2) && properties.startDevice === 0) {
     if (properties.machineMode === 1) {
       writeln("M3 ; Start spindle/router");
@@ -363,6 +413,50 @@ function emitTmcIfNeeded(currentsStr) {
     writeln(cmd);
     _lastTmcSet = currentsStr;
     _lastTmcTime = now;
+  }
+}
+
+function emitLevelingSetup() {
+  if (properties.machineMode === 2) {
+    return; // Laser mode skips leveling
+  }
+  var isFdm = properties.machineMode === 0;
+  var lvMode = isFdm ? properties.fdmLevelingMode : properties.cncLevelingMode;
+  var invocation = properties.levelingInvocation;
+  var context = isFdm ? "FDM" : "CNC";
+
+  if (lvMode === 0) {
+    writeln("; " + context + " leveling disabled");
+    return;
+  }
+
+  if (invocation === 2) {
+    writeln(";HOST_LEVELING_MARKERS_BEGIN mode=" + context + " type=" + levelingModeLabels[lvMode]);
+    writeln(";HOST_LEVELING_MARKERS_END");
+    return;
+  }
+
+  if (lvMode === 1) {
+    writeln("; " + context + " software leveling: host-driven mesh expected");
+    writeln(";SOFT_LEVEL_BEGIN " + context);
+    writeln(";SOFT_LEVEL_END " + context);
+    return;
+  }
+
+  if (invocation === 0) {
+    writeln("; " + context + " leveling selected: manual/host invocation required");
+    if (lvMode === 3) {
+      writeln("; Suggestion: run G29 manually, then issue M420 V to report mesh for software override.");
+    }
+    return;
+  }
+
+  writeln("; " + context + " leveling: executing firmware routine");
+  writeln("G28 ; Home before leveling");
+  writeln("G29 ; Firmware-based leveling");
+  writeln("M420 S1 ; Enable leveling");
+  if (lvMode === 3) {
+    writeln("M420 V ; Report leveling data to host (software override)");
   }
 }
 
