@@ -13,6 +13,7 @@
 
 | Version | File             | Date         | Changes/Fixes                                             |
 |---------|------------------|--------------|-----------------------------------------------------------|
+| 1.6.3   | MultiMode only   | 2026-01-12   | Added leveling modes (disabled/software/hardware/software override) with invocation options for FDM and CNC output. |
 | 1.6.1   | MultiMode only   | 2025-10-16   | Added per-axis invert X/Y options; applied to linear and rapid motion output. |
 | 1.6.0   | MultiMode only   | 2025-10-16   | Dynamic TMC adjustments: emit configurable TMC commands during job based on feed/heuristics; defaults, dedupe and rate-limiting implemented. |
 | 1.5.0   | MultiMode only   | 2025-10-13   | TMC Driver Setup: Optional user-supplied M-codes at startup for advanced Marlin TMC driver configuration. Header and docs updated. |
