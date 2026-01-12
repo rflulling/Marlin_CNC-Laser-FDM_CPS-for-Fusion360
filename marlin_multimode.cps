@@ -289,9 +289,12 @@ function emitLevelingDirectives() {
   var props = properties;
   var lMode = props.levelingMode || 0;
   var lInvoke = props.levelingInvocation || 0;
+  var lModeLabel = levelingModeLabels[lMode] || "Disabled";
+  var lInvokeLabel = levelingInvocationLabels[lInvoke] || "Manual/External (no code)";
   if (lMode === LEVELING_DISABLED) {
     return;
   }
+  writeln("; Leveling selection: " + lModeLabel + " (invoke: " + lInvokeLabel + ")");
   var mode = props.machineMode;
   if (mode === MODE_FDM) {
     if (lMode === LEVELING_SOFTWARE) { // Software
