@@ -276,6 +276,9 @@ var LEVELING_DISABLED = 0;
 var LEVELING_SOFTWARE = 1;
 var LEVELING_HARDWARE = 2;
 var LEVELING_OVERRIDE = 3;
+var INVOCATION_MANUAL = 0;
+var INVOCATION_START = 1;
+var INVOCATION_RESTORE = 2;
 var MODE_FDM = 0;
 var MODE_CNC = 1;
 var MODE_LASER = 2;
@@ -286,8 +289,6 @@ function emitLevelingDirectives() {
   var props = properties;
   var lMode = props.levelingMode || 0;
   var lInvoke = props.levelingInvocation || 0;
-  var lModeLabel = levelingModeLabels[lMode] || "Disabled";
-  var lInvokeLabel = levelingInvocationLabels[lInvoke] || "Manual/External (no code)";
   if (lMode === LEVELING_DISABLED) {
     return;
   }
@@ -295,56 +296,56 @@ function emitLevelingDirectives() {
   if (mode === MODE_FDM) {
     if (lMode === LEVELING_SOFTWARE) { // Software
       writeln("; SOFTWARE LEVELING: Host/controller should probe or supply mesh.");
-      if (lInvoke === 1) {
-        writeln(";SOFTWARE_LEVELING_START");
-      } else if (lInvoke === 2) {
-        writeln(";SOFTWARE_LEVELING_RESTORE");
+      if (lInvoke === INVOCATION_START) {
+        writeln("; SOFTWARE_LEVELING_START");
+      } else if (lInvoke === INVOCATION_RESTORE) {
+        writeln("; SOFTWARE_LEVELING_RESTORE");
       }
     } else if (lMode === LEVELING_HARDWARE) { // Hardware/Firmware
-      if (lInvoke === 1) {
+      if (lInvoke === INVOCATION_START) {
         writeln("G28 ; Home before firmware leveling");
         writeln("G29 ; Firmware leveling sequence (FDM)");
-      } else if (lInvoke === 2) {
+      } else if (lInvoke === INVOCATION_RESTORE) {
         writeln("M420 S1 ; Enable previously saved leveling mesh");
       } else {
         writeln("; Firmware/automatic leveling expected (no explicit commands emitted).");
       }
     } else if (lMode === LEVELING_OVERRIDE) { // Software override
       writeln("; SOFTWARE OVERRIDE: Capture firmware leveling data for host.");
-      if (lInvoke === 1) {
+      if (lInvoke === INVOCATION_START) {
         writeln("G28 ; Home before leveling");
         writeln("G29 ; Probe surface (firmware)");
         writeln("M420 V ; Report leveling state/mesh to host");
-      } else if (lInvoke === 2) {
+      } else if (lInvoke === INVOCATION_RESTORE) {
         writeln("M420 V ; Report stored leveling data to host");
       }
     }
   } else if (mode === MODE_CNC) {
     if (lMode === LEVELING_SOFTWARE) {
       writeln("; SOFTWARE LEVELING (CNC): Host should probe stock and apply work offset.");
-      if (lInvoke === 1) {
-        writeln(";SOFTWARE_LEVELING_START");
-      } else if (lInvoke === 2) {
-        writeln(";SOFTWARE_LEVELING_RESTORE");
+      if (lInvoke === INVOCATION_START) {
+        writeln("; SOFTWARE_LEVELING_START");
+      } else if (lInvoke === INVOCATION_RESTORE) {
+        writeln("; SOFTWARE_LEVELING_RESTORE");
       }
     } else if (lMode === LEVELING_HARDWARE) {
-      if (lInvoke === 1) {
+      if (lInvoke === INVOCATION_START) {
         writeln("; Firmware/CNC leveling requested.");
         writeln("; Requires Marlin configured for CNC probing/leveling with an appropriate probe or touch plate.");
         writeln("G28 ; Home before leveling");
         writeln("G29 ; Probe surface (CNC leveling)");
-      } else if (lInvoke === 2) {
+      } else if (lInvoke === INVOCATION_RESTORE) {
         writeln("M420 S1 ; Restore saved leveling mesh (CNC)");
       } else {
         writeln("; Firmware or external CNC leveling handled outside this file.");
       }
     } else if (lMode === LEVELING_OVERRIDE) {
       writeln("; SOFTWARE OVERRIDE (CNC): Firmware leveling with host capture of mesh.");
-      if (lInvoke === 1) {
+      if (lInvoke === INVOCATION_START) {
         writeln("G28 ; Home before leveling");
         writeln("G29 ; Firmware leveling");
         writeln("M420 V ; Host capture leveling data");
-      } else if (lInvoke === 2) {
+      } else if (lInvoke === INVOCATION_RESTORE) {
         writeln("M420 V ; Report stored leveling mesh to host");
       }
     }
